@@ -23,6 +23,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Read version from package.json
+      id: pkg
+      run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
 
@@ -53,6 +57,7 @@ jobs:
           ${{ env.GHCR_IMAGE }}
         tags: |
           type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=${{ steps.pkg.outputs.version }},enable={{is_default_branch}}
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
           type=ref,event=pr
@@ -68,3 +73,13 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         platforms: linux/amd64,linux/arm64
+
+    - name: Update Docker Hub description
+      if: github.event_name != 'pull_request'
+      uses: peter-evans/dockerhub-description@v4
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        repository: foru17/clash-master
+        readme-filepath: ./README.md
+        short-description: "Modern and beautiful traffic analysis dashboard for OpenClash"

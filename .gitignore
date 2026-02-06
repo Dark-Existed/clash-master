@@ -56,5 +56,5 @@ next-env.d.ts
 .cache/
 *.cache
 
-# specstory
+# AI dev logs
 .specstory/
